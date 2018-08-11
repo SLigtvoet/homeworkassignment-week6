@@ -18,6 +18,7 @@ const gameconfig_1 = require("../lib/gameconfig");
 let GameController = class GameController {
     async getGames() {
         const games = await entity_1.default.find();
+        console.log(games);
         return { games };
     }
     newGame(name) {
@@ -31,6 +32,14 @@ let GameController = class GameController {
         const game = await entity_1.default.findOne(id);
         if (!game)
             throw new routing_controllers_1.NotFoundError(`Can't find gameboard!`);
+        if (update.id && update.id !== id)
+            throw new routing_controllers_1.BadRequestError(`Invalid action, you're not allowed to change the ID.`);
+        if (update.color && !gameconfig_1.colors.includes(update.color)) {
+            throw new routing_controllers_1.BadRequestError(`Invalid action, please choose one of these colors: red, blue, green, yellow or magenta`);
+        }
+        if (update.board && gameconfig_1.moves(update.board, game.board) > 1) {
+            throw new routing_controllers_1.BadRequestError(`Invalid action, you can only make one move per turn.`);
+        }
         return entity_1.default.merge(game, update).save();
     }
 };
@@ -48,7 +57,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], GameController.prototype, "newGame", null);
 __decorate([
-    routing_controllers_1.Put('/games/:id'),
+    routing_controllers_1.Patch('/games/:id'),
     __param(0, routing_controllers_1.Param('id')),
     __param(1, routing_controllers_1.Body()),
     __metadata("design:type", Function),

@@ -3,9 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 require("reflect-metadata");
 const routing_controllers_1 = require("routing-controllers");
 const db_1 = require("./db");
-const controller_1 = require("./initialGame/controller");
+const gameController_1 = require("./controllers/gameController");
 const app = routing_controllers_1.createKoaServer({
-    controllers: [controller_1.default]
+    controllers: [gameController_1.default]
 });
 db_1.default()
     .then(_ => app.listen(4000, () => console.log('Listening on port 4000')))

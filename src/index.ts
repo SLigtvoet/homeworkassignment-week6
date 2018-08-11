@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import {createKoaServer} from "routing-controllers"
 import setupDb from './db'
-import GameController from './initialGame/controller';
+import GameController from './controllers/gameController';
 
 const app = createKoaServer({
    controllers: [GameController]
