@@ -1,26 +1,26 @@
 import { JsonController, Get, Post, BodyParam, Param, Body, NotFoundError, BadRequestError, Patch } from "routing-controllers";
 import Game from '../entities/game'
-import { defaultBoard, randomColor, colors, moves } from "../lib/gameconfig";
+import { moves } from "../lib/gameLogic";
+import {validate} from "class-validator";
 
 @JsonController()
 export default class GameController {
 
-
     @Get('/games')
     async getGames(){
         const games = await Game.find()
-        console.log(games)
         return { games }
     }
 
     @Post('/games')
-    newGame(
+    async newGame(
         @BodyParam('name', {required: true}) name: string
     ) {
-        const game = new Game()
-        game.name = name
-        game.board = JSON.parse(JSON.stringify(defaultBoard))
-        game.color = randomColor()
+        const game = Game.create({name: name})
+        const errors = await validate(game);
+        if (errors.length > 0) {
+            throw errors[0]
+        }
         return game.save()
     }
 
@@ -30,19 +30,25 @@ export default class GameController {
         @Body() update: Partial<Game>
     ) {
         const game = await Game.findOne(id)
-        if (!game) throw new NotFoundError(`Can't find gameboard!`)
-        if (update.id && update.id !==id) throw new BadRequestError(`Invalid action, you're not allowed to change the ID.`)
-        if (update.color && !colors.includes(update.color)) {
-            throw new BadRequestError(`Invalid action, please choose one of these colors: red, blue, green, yellow or magenta`)
+        if (!game) {
+            throw new NotFoundError(`Can't find gameboard!`)
         }
-        if (update.board && moves(update.board, game.board) > 1) {
+        if (update.id && update.id !==id) {
+            throw new BadRequestError(`Invalid action, you're not allowed to change the ID.`)
+        }
+        if (update.board && update.board.length === 3 && moves(game.board, update.board) > 1) {
             throw new BadRequestError(`Invalid action, you can only make one move per turn.`)
         }
-
-        return Game.merge(game, update).save()
+        if (update.board && update.board.reduce((acc, val) => acc.concat(val), []).filter((val : string) => (val !== 'x' && val !== 'o')).length > 0){
+            throw new BadRequestError(`Invalid board`)
+        }
+        const updatedGame = Game.merge(game, update)
+        const errors = await validate(updatedGame);
+        if (errors.length > 0) {
+            throw new BadRequestError('Invalid input')
+        }
+        return updatedGame.save()
     }
-
-
 }
 
 
