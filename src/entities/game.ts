@@ -22,7 +22,7 @@ export default class Game extends BaseEntity {
 
     @ArrayMinSize(3)
     @ArrayMaxSize(3)
-    @Column('simple-json', {nullable: false})
+    @Column('json', {nullable: false})
     board: Array<Array<string>> = [
         ['o', 'o', 'o'],
         ['o', 'o', 'o'],
